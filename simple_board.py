@@ -11,7 +11,7 @@ The board uses a 1-dimensional representation with padding
 
 import numpy as np
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, \
-                       PASS, is_black_white, coord_to_point, where1d, MAXSIZE
+                       PASS, is_black_white, coord_to_point, x, MAXSIZE
 
 class SimpleGoBoard(object):
 
