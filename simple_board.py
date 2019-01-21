@@ -164,9 +164,7 @@ class SimpleGoBoard(object):
         Play a move of color on point
         Returns boolean: whether move was legal
         """
-        #assert is_black_white(color)
-        if (not is_black_white(color)):
-            return False
+        assert is_black_white(color)
         if point == PASS:
             return
         if self.board[point] != EMPTY:
