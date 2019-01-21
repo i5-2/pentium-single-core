@@ -107,7 +107,7 @@ class GoBoardUtil(object):
         return legal_moves
             
     @staticmethod       
-    def generate_random_move(board, color):
+    def generate_random_move(board, color, use_eye_filter):
         """
         Generate a random move.
 

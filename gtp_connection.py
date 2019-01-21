@@ -11,6 +11,7 @@ from sys import stdin, stdout, stderr
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
+import re
 
 class GtpConnection():
 
@@ -268,10 +269,13 @@ class GtpConnection():
             coords = point_to_coord(move, self.board.size)
             gtp_moves.append(format_point(coords))
         if len(gtp_moves) > 0 and self.board.winner == None:
-            sorted_moves = ' '.join(sorted(gtp_moves)).upper()
+            sorted_moves = ' '.join(sort_moves_list(gtp_moves)).upper()
             self.respond(sorted_moves)
         else:
             self.respond()
+
+    def set_illegal_move(self, first, second):
+        self.respond("Illegal Move: {} {}".format(first, second))
 
     def play_cmd(self, args):
         """
@@ -279,6 +283,9 @@ class GtpConnection():
         """
         try:
             board_color = args[0].lower()
+            if (board_color != "b" and board_color != "w"):
+                self.set_illegal_move(board_color, "wrong color")
+                return
             board_move = args[1]
             color = color_to_int(board_color)
             if args[1].lower() == 'pass':
@@ -286,7 +293,11 @@ class GtpConnection():
                 self.board.current_player = GoBoardUtil.opponent(color)
                 self.respond()
                 return
-            coord = move_to_coord(args[1], self.board.size)
+            try:
+                coord = move_to_coord(args[1], self.board.size)
+            except ValueError:
+                self.set_illegal_move(args[1], "wrong coordinate")
+                return
             if coord:
                 move = coord_to_point(coord[0],coord[1], self.board.size)
             else:
@@ -294,7 +305,7 @@ class GtpConnection():
                            .format(move, args[1]))
                 return
             if not self.board.play_move(move, color):
-                self.respond("Illegal Move: {}".format(board_move))
+                self.set_illegal_move(board_move, self.board.illegal_reason(move, color))
                 return
             else:
                 self.debug_msg("Move: {}\nBoard:\n{}\n".
@@ -375,3 +386,11 @@ def color_to_int(c):
     color_to_int = {"b": BLACK , "w": WHITE, "e": EMPTY, 
                     "BORDER": BORDER}
     return color_to_int[c] 
+
+def move_split(move):
+   res = re.findall("([^\d]+)(\d+)", move)
+   res[0] = (res[0][0], int(res[0][1]))
+   return res
+
+def sort_moves_list(moves):
+    return sorted(moves, key=move_split)

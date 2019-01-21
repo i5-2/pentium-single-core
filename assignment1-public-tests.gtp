@@ -106,5 +106,3 @@ clear_board
 play B A1
 110 play W A1
 #?[illegal move: "a1" occupied]
-
-

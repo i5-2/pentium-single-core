@@ -164,7 +164,9 @@ class SimpleGoBoard(object):
         Play a move of color on point
         Returns boolean: whether move was legal
         """
-        assert is_black_white(color)
+        #assert is_black_white(color)
+        if (not is_black_white(color)):
+            return False
         if point == PASS:
             return
         if self.board[point] != EMPTY:
@@ -173,3 +175,7 @@ class SimpleGoBoard(object):
         self.check_win(point, color)
         self.current_player = GoBoardUtil.opponent(color)
         return True
+
+    def illegal_reason(self, point, color):
+        if (self.board[point] != EMPTY):
+            return "occupied"
