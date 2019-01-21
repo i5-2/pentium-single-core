@@ -59,7 +59,6 @@ class SimpleGoBoard(object):
         self.maxpoint = size * size + 3 * (size + 1)
         self.board = np.full(self.maxpoint, BORDER, dtype = np.int32)
         self._initialize_empty_points(self.board) 
-        self.winner = None
 
     def copy(self):
         b = SimpleGoBoard(self.size)
@@ -69,7 +68,6 @@ class SimpleGoBoard(object):
         b.current_player = self.current_player
         assert b.maxpoint == self.maxpoint
         b.board = np.copy(self.board)
-        b.winner = self.winner
         return b
 
     def row_start(self, row):
@@ -88,76 +86,63 @@ class SimpleGoBoard(object):
             start = self.row_start(row)
             board[start : start + self.size] = EMPTY
 
-    def point_in_board(self, point):
-        return point > 0 and point < len(self.board)
+    def is_eye(self, point, color):
+        """
+        Check if point is a simple eye for color
+        """
+        if not self._is_surrounded(point, color):
+            return False
+        # Eye-like shape. Check diagonals to detect false eye
+        opp_color = GoBoardUtil.opponent(color)
+        false_count = 0
+        at_edge = 0
+        for d in self._diag_neighbors(point):
+            if self.board[d] == BORDER:
+                at_edge = 1
+            elif self.board[d] == opp_color:
+                false_count += 1
+        return false_count <= 1 - at_edge # 0 at edge, 1 in center
+    
+    def _is_surrounded(self, point, color):
+        """
+        check whether empty point is surrounded by stones of color.
+        """
+        for nb in self._neighbors(point):
+            nb_color = self.board[nb]
+            if nb_color != BORDER and nb_color != color:
+                return False
+        return True
 
-    def check_win(self, point, color):
-        score = 0
-        loc = point
+    def _has_liberty(self, block):
+        """
+        Check if the given block has any liberty.
+        block is a numpy boolean array
+        """
+        for stone in where1d(block):
+            empty_nbs = self.neighbors_of_color(stone, EMPTY)
+            if empty_nbs:
+                return True
+        return False
 
-        # horizontal check
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc += 1
-        loc = point-1
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc -= 1
-        
-        if score >= 5:
-            self.winner = color
-            return
-
-        # reset score, location
-        score = 0
-        loc = point
-        # vertical check
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc += (self.size+1)
-        loc = point-(self.size+1)
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc -= (self.size+1)
-
-        if score >= 5:
-            self.winner = color
-            return
-
-        # reset score, location
-        score = 0
-        loc = point
-        # diagonal (left to right) check
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc += (self.size+2)
-        loc = point-(self.size+2)
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc -= (self.size+2)
-
-        if score >= 5:
-            self.winner = color
-            return
-
-        # reset score, location
-        score = 0
-        loc = point
-        # diagonal (right to left) check
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc += (self.size)
-        loc = point-(self.size)
-        while(self.point_in_board(loc) and self.board[loc] == color):
-            score += 1
-            loc -= (self.size)
-
-        if score >= 5:
-            self.winner = color
-            return
-
-        
-        
+    def _block_of(self, stone):
+        """
+        Find the block of given stone
+        Returns a board of boolean markers which are set for
+        all the points in the block 
+        """
+        marker = np.full(self.maxpoint, False, dtype = bool)
+        pointstack = [stone]
+        color = self.get_color(stone)
+        assert is_black_white(color)
+        marker[stone] = True
+        while pointstack:
+            p = pointstack.pop()
+            neighbors = self.neighbors_of_color(p, color)
+            for nb in neighbors:
+                if not marker[nb]:
+                    marker[nb] = True
+                    pointstack.append(nb)
+        return marker
 
     def play_move(self, point, color):
         """
@@ -165,11 +150,27 @@ class SimpleGoBoard(object):
         Returns boolean: whether move was legal
         """
         assert is_black_white(color)
-        if point == PASS:
-            return
         if self.board[point] != EMPTY:
             return False
         self.board[point] = color
-        self.check_win(point, color)
         self.current_player = GoBoardUtil.opponent(color)
         return True
+
+    def neighbors_of_color(self, point, color):
+        """ List of neighbors of point of given color """
+        nbc = []
+        for nb in self._neighbors(point):
+            if self.get_color(nb) == color:
+                nbc.append(nb)
+        return nbc
+        
+    def _neighbors(self, point):
+        """ List of all four neighbors of the point """
+        return [point - 1, point + 1, point - self.NS, point + self.NS]
+
+    def _diag_neighbors(self, point):
+        """ List of all four diagonal neighbors of point """
+        return [point - self.NS - 1, 
+                point - self.NS + 1, 
+                point + self.NS - 1, 
+                point + self.NS + 1]
