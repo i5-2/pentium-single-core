@@ -269,7 +269,7 @@ class GtpConnection():
             coords = point_to_coord(move, self.board.size)
             gtp_moves.append(format_point(coords))
         if len(gtp_moves) > 0 and self.board.winner == None:
-            sorted_moves = ' '.join(sort_moves_list(gtp_moves)).upper()
+            sorted_moves = ' '.join(sort_moves_list(gtp_moves))#.upper()
             self.respond(sorted_moves)
         else:
             self.respond()
