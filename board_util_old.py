@@ -107,9 +107,10 @@ class GoBoardUtil(object):
         return legal_moves
             
     @staticmethod       
-    def generate_random_move(board, color, use_eye_filter):
+    def generate_random_move(board, color):
         """
         Generate a random move.
+        Return PASS if no move found
 
         Arguments
         ---------
@@ -121,8 +122,10 @@ class GoBoardUtil(object):
         moves = board.get_empty_points()
         np.random.shuffle(moves)
         for move in moves:
-            if board.is_legal(move, color):
+            legal = board.is_legal(move, color)
+            if legal:
                 return move
+        return PASS
 
     @staticmethod
     def opponent(color):

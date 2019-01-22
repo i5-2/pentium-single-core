@@ -15,7 +15,9 @@ from simple_board import SimpleGoBoard
 class Go0():
     def __init__(self):
         """
-        Gomoku player that selects moves randomly from the set of legal moves.
+        Go player that selects moves randomly from the set of legal moves.
+        Does not use the fill-eye filter.
+        Passes only if there is no other legal move.
 
         Parameters
         ----------
@@ -28,9 +30,8 @@ class Go0():
         self.version = 1.0
         
     def get_move(self, board, color):
-        return GoBoardUtil.generate_random_move(board, color, False)
+        return GoBoardUtil.generate_random_move(board, color)
     
-
 def run():
     """
     start the gtp connection and wait for commands.
