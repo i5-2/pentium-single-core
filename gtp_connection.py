@@ -274,8 +274,8 @@ class GtpConnection():
         else:
             self.respond()
 
-    def set_illegal_move(self, first, second):
-        self.respond("Illegal Move: {} {}".format(first, second))
+    def set_illegal_move(self, move, reason):
+        self.respond("illegal move: \"{}\" {}".format(move.lower(), reason))
 
     def play_cmd(self, args):
         """
@@ -326,6 +326,8 @@ class GtpConnection():
         move_as_string = format_point(move_coord)
         if self.board.is_legal(move, color):
             self.board.play_move(move, color)
+            self.respond(move_as_string)
+        elif move_as_string == "pass":
             self.respond(move_as_string)
         else:
             self.respond("Illegal move: {}".format(move_as_string))
