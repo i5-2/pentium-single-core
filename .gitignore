@@ -3,3 +3,4 @@ __pycache__
 *.pyc
 *.dat
 tests/results
+.DS_Store
