@@ -1,5 +1,5 @@
 
-./assignment1-public-tests.gtp
+tests/assignment1-public-tests.gtp
 tests/play.tst
 tests/legal_moves.tst
 tests/final_result.tst
